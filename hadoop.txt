@@ -1,0 +1,115 @@
+practical  11 
+
+ssh hdoop@10.10.14.149
+
+start-dfs.sh
+
+start-yarn.sh
+
+jps
+
+
+nano input.txt
+
+nano WordCount.java
+
+export HADOOP_CLASSPATH=$(hadoop classpath)
+
+javac -classpath $HADOOP_CLASSPATH -d . WordCount.java
+
+jar -cvf wordcount.jar *.class
+
+hdfs dfs -mkdir /user/hdoop/wc_input
+
+hdfs dfs -put input.txt /user/hdoop/wc_input
+
+hadoop jar wordcount.jar WordCount /user/hdoop/wc_input /user/hdoop/wc_output
+
+hdfs dfs -cat /user/hdoop/wc_output/part-r-00000
+
+
+WordCount.java
+import java.io.IOException;
+import java.util.StringTokenizer;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+public class WordCount {
+ public static class TokenizerMapper
+ extends Mapper<Object, Text, Text, IntWritable>{
+ private final static IntWritable one = new IntWritable(1);
+ private Text word = new Text();
+ public void map(Object key, Text value, Context context)
+ throws IOException, InterruptedException {
+ StringTokenizer itr = new StringTokenizer(value.toString());
+ while (itr.hasMoreTokens()) {
+ word.set(itr.nextToken());
+ context.write(word, one);
+ }
+ }
+ }
+
+public static class IntSumReducer
+ extends Reducer<Text, IntWritable, Text, IntWritable>{
+ public void reduce(Text key, Iterable<IntWritable> values, Context context)
+ throws IOException, InterruptedException {
+ int sum = 0;
+ for (IntWritable val : values) {
+ sum += val.get();
+ }
+ context.write(key, new IntWritable(sum));
+ }
+ }
+ public static void main(String[] args) throws Exception {
+ Configuration conf = new Configuration();
+ Job job = Job.getInstance(conf, "Word Count");
+
+job.setJarByClass(WordCount.class);
+ job.setMapperClass(TokenizerMapper.class);
+ job.setReducerClass(IntSumReducer.class);
+ job.setOutputKeyClass(Text.class);
+ job.setOutputValueClass(IntWritable.class);
+ FileInputFormat.addInputPath(job, new Path(args[0]));
+ FileOutputFormat.setOutputPath(job, new Path(args[1]));
+ System.exit(job.waitForCompletion(true) ? 0 : 1);
+ }
+}
+
+
+
+nano input.txt
+hello pict hello
+pict pict
+
+
+
+
+this is for local
+
+
+nano WordCount.java
+
+# Compile Java code
+javac -classpath `hadoop classpath` WordCount.java
+
+# Create JAR file
+jar cf wordcount.jar WordCount*.class
+
+# Create input file
+echo "hello world hello hadoop big data hadoop" > input.txt
+
+# Remove old output if exists
+rm -rf output
+
+# Run Hadoop WordCount (local mode)
+hadoop jar wordcount.jar WordCount input.txt output
+
+# Display output
+echo "----- OUTPUT -----"
+cat output/part-r-00000
