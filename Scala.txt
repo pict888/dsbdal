@@ -1,0 +1,39 @@
+cd ~/Directory
+nano factorial.scala
+
+object A: 
+
+  def main(args:Array[String]): Unit=
+  
+    var n = 5
+    var f = 1
+    
+    for(i <- 1 to n)
+      f = f* i
+    
+    println(f)
+
+spark-shell
+
+:load factorial.scala
+
+
+cd ~/Directory
+nano bubblesort.scala
+
+object A:
+  def main(args:Array[String]): Unit=
+    var a = Array(5,3,1,2,4)
+    for (i <- 0 until a.length)
+      for (j <- 0 until a.length-1)
+        if(a(j) > a(j+1))then
+          var t = a(j)
+          a(j) = a(j+1)
+          a(j+1) = t
+    
+    println(a.mkString(" "))
+    
+
+spark-shell
+
+:load bubblesort.scala
